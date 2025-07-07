@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Nature Admin Panel</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    body { background: #fff; color: #191919; font-family: 'Segoe UI', 'Arial', sans-serif; margin: 0; padding: 0; }
+    .admin-container { max-width: 1000px; margin: 60px auto; background: #f2f2f2; border-radius: 16px; padding: 36px 28px 18px 28px; box-shadow: 0 6px 24px rgba(0,0,0,0.08);}
+    .admin-logo { font-size: 2.4em; font-weight: 900; letter-spacing: 0.22em; background: linear-gradient(90deg, #000 0%, #fff 55%, #000 100%); background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-align: center; animation: shine 2.8s linear infinite alternate; margin-bottom: 18px; text-shadow:2px 0 8px #fff,0 2px 8px #fff,3px 3px 12px #888;}
+    @keyframes shine {0%{background-position:100% 0;}100%{background-position:0 0;}}
+    .msg {text-align:center; margin-bottom:10px; color:#b00; min-height:1.4em;}
+    input, textarea, button {width:100%; margin-top:8px; margin-bottom:16px; font-size:1em; padding:10px; border-radius:7px; border:1px solid #bbb; background:#fff; color:#191919; box-sizing:border-box;}
+    textarea {resize:vertical; min-height:60px;}
+    button {background:#000; color:#fff; font-weight:bold; border:none; cursor:pointer;transition:background 0.18s;}
+    button:hover {background:#333;}
+    .logout-btn {width:auto;float:right;background:#a33;margin-top:-44px;margin-right:-5px;}
+    .logout-btn:hover {background:#611;}
+    .gallery-admin-grid {display: flex; flex-wrap: wrap; gap: 18px; margin-top: 18px; margin-bottom: 18px; justify-content: flex-start;}
+    .item-admin-thumb {background:#fff; border-radius:16px; box-shadow:0 4px 14px rgba(0,0,0,0.09); padding: 8px; width: 120px; min-height: 120px; display:flex; flex-direction:column; align-items:center; position:relative; cursor: pointer; transition: box-shadow 0.18s;}
+    .item-admin-thumb:hover { box-shadow:0 8px 28px rgba(0,0,0,0.14);}
+    .media-thumb {width: 104px; height: 104px; border-radius: 8px; background: #eee; object-fit: cover; margin-bottom: 6px;}
+    .media-thumb.video {background:#222;}
+    .note-thumb {font-size: 0.92em; color: #444; font-weight: 500; text-align: center; max-width: 100px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;}
+    .admin-actions { display:flex; gap:7px; margin-top:6px; width: 100%; justify-content: center;}
+    .admin-actions button {width:auto; font-size:0.92em; padding:5px 12px;}
+    #fs-overlay { display:none; position:fixed; z-index:1000; left:0; top:0; width:100vw; height:100vh; background:rgba(20,20,20,0.97); justify-content:center; align-items:center; }
+    #fs-content-wrap {position:relative;max-width:97vw;max-height:94vh;display:flex;flex-direction:column;align-items:center;}
+    #fs-close { position:absolute; top:-40px; right:0; background:none; border:none; color:#fff; font-size:2.4em; cursor:pointer; z-index:1010;}
+    .fs-note { color:#fff; font-size: 1.18em; font-weight: 500; text-align: center; margin-top: 18px; word-break: break-word;}
+    .upload-section {margin-bottom: 18px;}
+    .upload-flex-row {display: flex; gap: 18px;}
+    .upload-col {flex: 1;}
+    .progress-bar {height:8px;background:#ccc;border-radius:4px;overflow:hidden;margin-bottom:16px;}
+    .progress-bar-inner {height:100%;background:#0077ff;transition:width .3s;}
+    .skeleton {background:linear-gradient(90deg,#eee 25%,#ddd 37%,#eee 63%);background-size:400% 100%;animation:skeleton-shine 1.2s ease-in-out infinite;}
+    @keyframes skeleton-shine {0%{background-position:100% 0}100%{background-position:-100% 0}}
+    @media (max-width: 600px) {
+      .gallery-admin-grid {gap:7px;}
+      .item-admin-thumb {width: 90px; min-height: 90px;}
+      .media-thumb {width: 74px; height: 74px;}
+      .note-thumb {font-size: 0.85em; max-width: 70px;}
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-container" id="login-box">
+    <div class="admin-logo">NATURE</div>
+    <h2 style="text-align:center;font-size:2em;font-weight:900;letter-spacing:0.18em;margin-bottom:10px;">Admin Login</h2>
+    <div class="msg" id="login-msg"></div>
+    <input type="password" id="admin-pw" placeholder="Enter admin password" autocomplete="current-password">
+    <button id="login-btn">Login</button>
+  </div>
+  <div class="admin-container" id="admin-panel" style="display:none;">
+    <div class="admin-logo">NATURE</div>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+    <h2 style="text-align:center;font-size:2em;font-weight:900;letter-spacing:0.18em;margin-bottom:10px;">Admin Panel</h2>
+    <div class="upload-section">
+      <div class="upload-flex-row">
+        <div class="upload-col">
+          <form id="upload-form">
+            <label><b>Upload Photo</b></label>
+            <input type="file" id="media" accept="image/jpeg,image/png,image/gif" required>
+            <textarea id="note" placeholder="Optional note..."></textarea>
+            <div class="progress-bar" id="progress-photo" style="display:none;"><div class="progress-bar-inner" style="width:0"></div></div>
+            <button type="submit">Upload Photo</button>
+            <div id="upload-status" class="msg"></div>
+          </form>
+        </div>
+        <div class="upload-col">
+          <form id="upload-form-video">
+            <label><b>Upload Video</b></label>
+            <input type="file" id="media-video" accept="video/mp4,video/webm,video/ogg" required>
+            <textarea id="note-video" placeholder="Optional note..."></textarea>
+            <div class="progress-bar" id="progress-video" style="display:none;"><div class="progress-bar-inner" style="width:0"></div></div>
+            <button type="submit">Upload Video</button>
+            <div id="upload-status-video" class="msg"></div>
+          </form>
+        </div>
+        <div class="upload-col">
+          <form id="uploadthing-form">
+            <label><b>Add UploadThing Video Link</b></label>
+            <input type="url" id="uploadthing-url" placeholder="Paste UploadThing.com video link" required>
+            <textarea id="uploadthing-note" placeholder="Optional note..."></textarea>
+            <button type="submit">Add Video Link</button>
+            <div id="uploadthing-status" class="msg"></div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <hr>
+    <div class="gallery-admin-grid" id="admin-gallery"></div>
+    <hr>
+    <div>
+      <h3 style="text-align:center;margin:0;font-weight:700;">Change Admin Password</h3>
+      <div id="pwchange-area">
+        <input type="password" id="secret-code" placeholder="Enter secret code">
+        <button onclick="verifySecretCode(event)">Verify</button>
+        <div id="secret-msg" class="msg"></div>
+      </div>
+      <div id="pwchange-form" style="display:none;">
+        <input type="password" id="newpw" placeholder="New Password (min 6 chars)">
+        <button onclick="changePassword(event)">Change Password</button>
+        <div id="pw-msg" class="msg"></div>
+      </div>
+    </div>
+  </div>
+  <div id="fs-overlay" onclick="closeFS(event)">
+    <div id="fs-content-wrap">
+      <button id="fs-close" onclick="closeFS(event)">&times;</button>
+      <div id="fs-content"></div>
+    </div>
+  </div>
+  <script>
+  const MAX_UPLOAD_SIZE = 1024 * 1024 * 1024; // 1GB
+
+  function showFileError(input, msg) {
+    let status = input.closest('form').querySelector('.msg');
+    status.textContent = msg;
+  }
+
+  document.getElementById('media').addEventListener('change', function() {
+    if (this.files[0] && this.files[0].size > MAX_UPLOAD_SIZE) {
+      showFileError(this, 'File is too large! (max 1GB)');
+      this.value = "";
+    }
+  });
+  document.getElementById('media-video').addEventListener('change', function() {
+    if (this.files[0] && this.files[0].size > MAX_UPLOAD_SIZE) {
+      showFileError(this, 'File is too large! (max 1GB)');
+      this.value = "";
+    }
+  });
+
+  function showGallerySkeleton() {
+    const g = document.getElementById('admin-gallery');
+    g.innerHTML = "";
+    for(let i=0;i<6;i++) {
+      const div = document.createElement('div');
+      div.className = "item-admin-thumb skeleton";
+      div.style.height = "140px";
+      g.appendChild(div);
+    }
+  }
+
+  function showAdminPanel() {
+    document.getElementById('login-box').style.display = 'none';
+    document.getElementById('admin-panel').style.display = '';
+    fetchAdminGallery();
+  }
+  function showLoginBox() {
+    document.getElementById('admin-panel').style.display = 'none';
+    document.getElementById('login-box').style.display = '';
+    document.getElementById('admin-pw').value = '';
+    document.getElementById('login-msg').textContent = '';
+  }
+
+  // Attach login event
+  document.getElementById('login-btn').onclick = function() {
+    let pw = document.getElementById('admin-pw').value;
+    document.getElementById('login-msg').textContent = 'Logging in...';
+    fetch('admin_login.php', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      credentials: 'same-origin',
+      body: JSON.stringify({password: pw})
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        showAdminPanel();
+      } else {
+        document.getElementById('login-msg').textContent = data.message || 'Login failed';
+        document.getElementById('admin-pw').value = '';
+      }
+    })
+    .catch(err=>{
+      document.getElementById('login-msg').textContent = 'Network error';
+    });
+  };
+
+  function logout() {
+    fetch('admin_logout.php', {credentials: 'same-origin'})
+      .then(res => res.json())
+      .then(_ => { showLoginBox(); });
+  }
+
+  function uploadWithProgress(url, formData, progressBar, statusBox, cb) {
+    progressBar.style.display = "";
+    statusBox.textContent = "Uploading...";
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', url, true);
+    xhr.withCredentials = true;
+    xhr.upload.onprogress = function(e) {
+      if (e.lengthComputable) {
+        let percent = Math.round((e.loaded/e.total)*100);
+        progressBar.querySelector('.progress-bar-inner').style.width = percent+"%";
+      }
+    };
+    xhr.onload = function() {
+      progressBar.style.display = "none";
+      progressBar.querySelector('.progress-bar-inner').style.width = "0";
+      try {
+        const data = JSON.parse(xhr.responseText);
+        cb(data);
+      } catch {
+        statusBox.textContent = "Upload failed (server error)";
+      }
+    };
+    xhr.onerror = function() {
+      progressBar.style.display = "none";
+      statusBox.textContent = "Network error or upload interrupted";
+    }
+    xhr.send(formData);
+  }
+
+  document.getElementById('upload-form').onsubmit = function(ev) {
+    ev.preventDefault();
+    let media = document.getElementById('media').files[0];
+    let note = document.getElementById('note').value;
+    let status = document.getElementById('upload-status');
+    let progress = document.getElementById('progress-photo');
+    if (!media) {
+      status.textContent = "Select a file!";
+      return;
+    }
+    if (media.size > MAX_UPLOAD_SIZE) {
+      status.textContent = "File is too large! (max 1GB)";
+      return;
+    }
+    let fd = new FormData();
+    fd.append('media', media);
+    fd.append('note', note);
+    uploadWithProgress('upload.php', fd, progress, status, (data)=>{
+      if (data.success) {
+        status.textContent = 'Uploaded!';
+        document.getElementById('media').value = '';
+        document.getElementById('note').value = '';
+        fetchAdminGallery();
+      } else {
+        status.textContent = data.message || 'Upload failed';
+      }
+    });
+  };
+
+  document.getElementById('upload-form-video').onsubmit = function(ev) {
+    ev.preventDefault();
+    let media = document.getElementById('media-video').files[0];
+    let note = document.getElementById('note-video').value;
+    let status = document.getElementById('upload-status-video');
+    let progress = document.getElementById('progress-video');
+    if (!media) {
+      status.textContent = "Select a file!";
+      return;
+    }
+    if (media.size > MAX_UPLOAD_SIZE) {
+      status.textContent = "File is too large! (max 1GB)";
+      return;
+    }
+    let fd = new FormData();
+    fd.append('media', media);
+    fd.append('note', note);
+    uploadWithProgress('upload.php', fd, progress, status, (data)=>{
+      if (data.success) {
+        status.textContent = 'Uploaded!';
+        document.getElementById('media-video').value = '';
+        document.getElementById('note-video').value = '';
+        fetchAdminGallery();
+      } else {
+        status.textContent = data.message || 'Upload failed';
+      }
+    });
+  };
+
+  // UploadThing video link form
+  document.getElementById('uploadthing-form').onsubmit = function(ev) {
+    ev.preventDefault();
+    let url = document.getElementById('uploadthing-url').value.trim();
+    let note = document.getElementById('uploadthing-note').value.trim();
+    let status = document.getElementById('uploadthing-status');
+    if (!/^https:\/\/[a-zA-Z0-9.]+\/f\/[a-zA-Z0-9]+/.test(url)) {
+      status.textContent = "Invalid UploadThing.com video URL";
+      return;
+    }
+    status.textContent = "Saving...";
+    fetch('uploadthing_add.php', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      credentials: 'same-origin',
+      body: JSON.stringify({ url: url, note: note })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        status.textContent = "Added!";
+        document.getElementById('uploadthing-url').value = "";
+        document.getElementById('uploadthing-note').value = "";
+        fetchAdminGallery();
+      } else {
+        status.textContent = data.message || "Failed to add";
+      }
+    })
+    .catch(()=>{ status.textContent = "Network error"; });
+  };
+
+  function verifySecretCode(ev) {
+    ev.preventDefault();
+    let code = document.getElementById('secret-code').value;
+    fetch('change_password.php', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      credentials: 'same-origin',
+      body: JSON.stringify({secret: code})
+    }).then(res => res.json()).then(data => {
+      if (data.success && data.can_change) {
+        document.getElementById('pwchange-form').style.display = '';
+        document.getElementById('secret-msg').textContent = 'Secret verified. You can now set new password.';
+      } else {
+        document.getElementById('secret-msg').textContent = data.message || 'Wrong code';
+      }
+    }).catch(()=>{document.getElementById('secret-msg').textContent="Network error";});
+  }
+  function changePassword(ev) {
+    ev.preventDefault();
+    let newpw = document.getElementById('newpw').value;
+    fetch('change_password.php', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      credentials: 'same-origin',
+      body: JSON.stringify({new_password: newpw})
+    }).then(res => res.json()).then(data => {
+      document.getElementById('pw-msg').textContent = data.success ? 'Password changed!' : (data.message || 'Failed');
+      if (data.success) document.getElementById('pwchange-form').style.display = 'none';
+    }).catch(()=>{document.getElementById('pw-msg').textContent="Network error";});
+  }
+
+  // Fetch gallery with skeleton loading
+  function fetchAdminGallery() {
+    showGallerySkeleton();
+    fetch('fetch.php', {credentials:'same-origin'})
+    .then(res => res.json())
+    .then(items => {
+      const g = document.getElementById('admin-gallery');
+      g.innerHTML = '';
+      items.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'item-admin-thumb';
+        let mediaElem;
+        if (item.type === 'video') {
+          if(item.is_uploadthing) {
+            // UploadThing link video
+            mediaElem = document.createElement('video');
+            mediaElem.src = item.url + "#t=0.1";
+            mediaElem.className = 'media-thumb';
+            mediaElem.controls = false;
+            mediaElem.muted = true;
+            mediaElem.playsInline = true;
+            mediaElem.preload = "metadata";
+            mediaElem.onmouseover = function(){mediaElem.play()};
+            mediaElem.onmouseout = function(){mediaElem.pause()};
+          } else {
+            // Local upload
+            mediaElem = document.createElement('video');
+            mediaElem.src = 'uploads/' + item.filename + "#t=0.1";
+            mediaElem.className = 'media-thumb';
+            mediaElem.controls = false;
+            mediaElem.muted = true;
+            mediaElem.playsInline = true;
+            mediaElem.preload = "metadata";
+            mediaElem.onmouseover = function(){mediaElem.play()};
+            mediaElem.onmouseout = function(){mediaElem.pause()};
+          }
+        } else {
+          mediaElem = document.createElement('img');
+          mediaElem.src = 'uploads/' + item.filename;
+          mediaElem.className = 'media-thumb';
+          mediaElem.loading = "lazy";
+        }
+        mediaElem.onclick = function(ev) {
+          ev.stopPropagation();
+          showFS(item);
+        };
+        div.appendChild(mediaElem);
+
+        let note = document.createElement('div');
+        note.className = 'note-thumb';
+        note.title = item.note || '';
+        note.textContent = item.note ? item.note.split('<!--ad-split-->')[0] : '';
+        div.appendChild(note);
+
+        let actions = document.createElement('div');
+        actions.className = 'admin-actions';
+        let editBtn = document.createElement('button');
+        editBtn.textContent = 'Edit';
+        editBtn.onclick = function(ev) {
+          ev.stopPropagation();
+          showEditArea(div, item, note, fetchAdminGallery);
+        };
+        let delBtn = document.createElement('button');
+        delBtn.textContent = 'Delete';
+        delBtn.style.background = '#a33';
+        delBtn.onclick = function(ev) {
+          ev.stopPropagation();
+          if(confirm('Delete this item?')) {
+            let fd = new FormData();
+            fd.append('op', 'delete');
+            fd.append('filename', item.filename || '');
+            if(item.is_uploadthing) fd.append('uploadthing_url', item.url);
+            fetch('edit_delete.php', {method:'POST', body:fd, credentials:'same-origin'})
+            .then(r=>r.json())
+            .then(res=>{
+              if(res.success) fetchAdminGallery();
+              else alert('Delete failed');
+            });
+          }
+        };
+        actions.appendChild(editBtn); actions.appendChild(delBtn);
+        div.appendChild(actions);
+
+        div.onclick = function(ev) {
+          if (ev.target === editBtn || ev.target === delBtn) return;
+          showFS(item);
+        };
+
+        g.appendChild(div);
+      });
+    });
+  }
+  function showEditArea(itemDiv, item, noteDiv, refresh) {
+    noteDiv.style.display = "none";
+    let editArea = document.createElement('div');
+    editArea.className = 'edit-area';
+    let noteInput = document.createElement('textarea');
+    noteInput.value = item.note ? item.note.split('<!--ad-split-->')[0] : '';
+    let saveBtn = document.createElement('button');
+    saveBtn.textContent = 'Save';
+    saveBtn.onclick = function() {
+      let fd = new FormData();
+      fd.append('op', 'edit');
+      fd.append('filename', item.filename || '');
+      fd.append('note', noteInput.value);
+      if(item.is_uploadthing) fd.append('uploadthing_url', item.url);
+      fetch('edit_delete.php', {method:'POST', body:fd, credentials:'same-origin'})
+      .then(r=>r.json())
+      .then(res=>{
+        if(res.success) {
+          refresh();
+        } else alert('Edit failed');
+      });
+    };
+    let cancelBtn = document.createElement('button');
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.onclick = function() {refresh();}
+    editArea.appendChild(noteInput);
+    editArea.appendChild(saveBtn);
+    editArea.appendChild(cancelBtn);
+    itemDiv.appendChild(editArea);
+  }
+
+  // Fullscreen display using Fullscreen API for smoother experience
+  function showFS(item) {
+    const overlay = document.getElementById('fs-overlay');
+    const fsContent = document.getElementById('fs-content');
+    fsContent.innerHTML = '';
+    let elem;
+    let loading = document.createElement('div');
+    loading.textContent = "Loading...";
+    loading.style.color = "#fff";
+    loading.style.textAlign = "center";
+    loading.style.marginTop = "32px";
+    fsContent.appendChild(loading);
+
+    function finishLoad() {
+      loading.remove();
+      if (item.note && item.note.trim() !== "") {
+        const note = document.createElement('div');
+        note.className = 'fs-note';
+        note.textContent = item.note ? item.note.split('<!--ad-split-->')[0] : '';
+        fsContent.appendChild(note);
+      }
+    }
+
+    if (item.type === 'video') {
+      elem = document.createElement('video');
+      elem.src = item.is_uploadthing ? item.url : ('uploads/' + item.filename);
+      elem.style.maxWidth = '96vw';
+      elem.style.maxHeight = '84vh';
+      elem.controls = true;
+      elem.autoplay = true;
+      elem.playsInline = true;
+      elem.preload = "auto";
+      elem.onerror = () => {
+        loading.textContent = "Failed to load video.";
+      };
+      elem.onloadeddata = finishLoad;
+    } else {
+      elem = document.createElement('img');
+      elem.src = 'uploads/' + item.filename;
+      elem.style.maxWidth = '96vw';
+      elem.style.maxHeight = '84vh';
+      elem.loading = "eager";
+      elem.onerror = () => {
+        loading.textContent = "Failed to load image.";
+      };
+      elem.onload = finishLoad;
+    }
+    fsContent.insertBefore(elem, loading);
+
+    overlay.style.display = 'flex';
+
+    // Use fullscreen API if available
+    let wrap = document.getElementById('fs-content-wrap');
+    if (wrap.requestFullscreen) {
+      wrap.requestFullscreen().catch(()=>{});
+    }
+    // Esc key closes
+    document.onkeydown = function(e){
+      if(e.key==='Escape') closeFS();
+    }
+  }
+  function closeFS(event) {
+    if (!event || event.target.id === 'fs-overlay' || event.target.id === 'fs-close') {
+      document.getElementById('fs-overlay').style.display = 'none';
+      document.getElementById('fs-content').innerHTML = '';
+      if (document.fullscreenElement) document.exitFullscreen();
+      document.onkeydown = null;
+    }
+  }
+
+  window.onload = function() {
+    document.getElementById('admin-pw').focus();
+  }
+  </script>
+</body>
+</html>

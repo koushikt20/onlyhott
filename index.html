@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Nature Gallery</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    :root {
+      --main-bg: #181820;
+      --card-bg: #23232d;
+      --accent: #fff;
+      --shadow1: 0 2px 18px #000b, 0 1.5px 6px #0008;
+      --shadow2: 0 8px 32px #000e, 0 2.5px 10px #0006;
+      --ad-bg: #181820;
+      --radius: 16px;
+    }
+    body {
+      background: linear-gradient(135deg, var(--main-bg) 70%, #23234e 100%);
+      color: var(--accent);
+      font-family: 'Segoe UI', Arial, sans-serif;
+      margin: 0;
+      min-height: 100vh;
+      animation: none;
+    }
+    .header {
+      width: 100%;
+      padding: 38px 0 20px 0;
+      text-align: center;
+    }
+    .nature-logo {
+      font-size: 2.35em;
+      font-weight: 1000;
+      letter-spacing: 0.23em;
+      background: linear-gradient(90deg, #000, #fff, #000);
+      background-size: 200% auto;
+      background-position: 0 100%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 3px 16px #0002, 0 6px 36px #0001;
+      animation: logo-shine 3.5s cubic-bezier(.4,0,.2,1) infinite alternate;
+      margin-bottom: 8px;
+      transition: background-position 0.4s cubic-bezier(.4,0,.2,1);
+      user-select: none;
+    }
+    @keyframes logo-shine {
+      0% { background-position: 100% 0; }
+      100% { background-position: 0 0; }
+    }
+    .gallery-title-small {
+      text-align:center;
+      font-size:1.15em;
+      font-weight:600;
+      letter-spacing:0.13em;
+      margin-bottom:10px;
+      color:#1976d2;
+      text-shadow: 0 2px 12px #e3e9f1;
+      user-select:none;
+    }
+    .search-bar-container {
+      text-align: center;
+      margin-bottom: 18px;
+    }
+    .search-bar {
+      padding: 10px;
+      font-size: 1.1em;
+      width: 95%;
+      max-width: 370px;
+      border-radius: 8px;
+      border: 1.5px solid #1976d2;
+      background: #24244e;
+      color: #fff;
+      outline: none;
+      margin: 0 auto 0 auto;
+      box-sizing: border-box;
+    }
+    .search-bar:focus {
+      border-color: #1976d2;
+      background: #24244e;
+    }
+    .note-list {
+      max-width: 420px;
+      margin: 0 auto 18px auto;
+      background: #23234e;
+      border-radius: 12px;
+      box-shadow: 0 2px 18px #000b, 0 1.5px 6px #0008;
+      padding: 10px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 1.1em;
+    }
+    .note-list-item {
+      padding: 10px 16px;
+      cursor: pointer;
+      color: #fff;
+      background: none;
+      border: none;
+      text-align: left;
+      border-radius: 6px;
+      transition: background 0.15s;
+      font-size: 1.03em;
+    }
+    .note-list-item:hover {
+      background: #1976d2;
+      color: #fff;
+    }
+    .gallery {
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 28px;
+      max-width: 1220px; margin: 0 auto 54px auto;
+      animation: fadein 1s cubic-bezier(.9,.2,.2,.9);
+    }
+    @keyframes fadein {
+      from{opacity:0;transform:translateY(40px) scale(0.96);}
+      to{opacity:1;transform:translateY(0) scale(1);}
+    }
+    .item {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow1);
+      padding: 16px 11px 23px 11px;
+      width: 99vw; max-width: 375px; min-width: 260px;
+      position: relative;
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      overflow: hidden;
+      transition: transform 0.18s cubic-bezier(.6,1.8,.2,1), box-shadow 0.18s;
+      transform-style: preserve-3d;
+      will-change: transform, box-shadow;
+      border: 1.5px solid #24242e;
+      perspective: 600px;
+    }
+    .item:hover {
+      box-shadow: var(--shadow2);
+      transform: translateY(-6px) scale(1.03) rotateY(-2deg) rotateX(1deg);
+      z-index: 2;
+    }
+    .media {
+      width: 100%;
+      border-radius: 12px;
+      background: #111;
+      min-height: 135px;
+      margin-bottom: 10px;
+      box-shadow: 0 6px 32px #0007;
+      transform: translateZ(20px);
+      cursor: pointer;
+      transition: box-shadow 0.16s;
+      object-fit: cover;
+    }
+    .note {
+      font-size: 1.11em;
+      margin: 6px 0 0 0;
+      color: #fff;
+      min-height: 1.4em;
+      word-break: break-word;
+      letter-spacing: 0.01em;
+      text-shadow: 1px 1px 2px #0004;
+      filter: drop-shadow(0 2px 6px #000a);
+      text-align: center;
+      animation: fadein 0.5s;
+    }
+    .download-btn {
+      position: absolute; top: 12px; right: 16px;
+      background: linear-gradient(90deg, #fff 40%, #181820 100%);
+      color: #000; border: none; border-radius: 5px;
+      padding: 6px 15px; cursor: pointer; font-size: 1em; font-weight: 700;
+      box-shadow: 0 2px 8px #0002;
+      transition: background 0.18s, color 0.18s, transform 0.16s;
+      z-index: 2;
+      outline: none;
+    }
+    .download-btn:hover { background: #000; color: #fff; transform: scale(1.05);}
+    #fs-overlay {
+      display:none; position:fixed; z-index:1000; left:0; top:0;
+      width:100vw; height:100vh; background:rgba(10,12,16,0.99);
+      justify-content:center; align-items:center; animation: fadein 0.6s;
+      backdrop-filter: blur(5px);
+    }
+    #fs-content {max-width:98vw; max-height:97vh;}
+    #fs-close {
+      position:absolute; top:22px; right:30px; background:none; border:none;
+      color:#fff; font-size:2.3em; cursor:pointer; z-index:1001;
+      text-shadow: 0 2px 18px #0007,0 0 2px #fff;
+      transition: color 0.18s;
+    }
+    #fs-close:hover { color: #000; }
+    #master-ad-window {
+      position: fixed;
+      z-index: 1300;
+      right: 20px;
+      bottom: 22px;
+      background: #191919;
+      border-radius: 16px;
+      box-shadow: 0 10px 32px #0007, 0 2px 10px #0003;
+      min-width: 240px;
+      max-width: 97vw;
+      padding: 0 0 10px 0;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      transition: opacity .3s;
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+    #master-ad-window.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity .3s, visibility 0s .3s;
+    }
+    .ad-header-bar {
+      width: 100%;
+      padding: 10px 16px 10px 16px;
+      font-size: 1.09em;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: #fff;
+      background: linear-gradient(90deg, #000 60%, #fff 98%);
+      background-size: 200% auto;
+      background-position: 0 100%;
+      border-radius: 16px 16px 0 0;
+      user-select: none;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 2px 18px #000a, 0 1.5px 6px #0005;
+      animation: logo-shine 2.8s cubic-bezier(.4,0,.2,1) infinite alternate;
+      position: relative;
+    }
+    .ad-window-close {
+      position: absolute;
+      top: 0;
+      right: 0;
+      background: #f00 !important;
+      border: none;
+      color: #fff !important;
+      font-size: 1.9em;
+      cursor: pointer;
+      z-index: 2;
+      opacity: 1 !important;
+      padding: 12px 23px 12px 11px;
+      line-height: 1;
+      border-radius: 0 0 0 16px;
+      box-shadow: 0 0 8px #000c;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .ad-window-close:active,
+    .ad-window-close:focus { 
+      opacity: 1; 
+      color: #fff !important; 
+      background: #d00 !important; 
+      box-shadow: 0 0 0 4px #fff8; 
+    }
+    .ad-window-close:hover { 
+      opacity: 1; 
+      color: #fff !important; 
+      background: #a00 !important; 
+    }
+    .ad-window-content {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      padding: 8px 8px 0px 8px;
+      align-items: center;
+      background: #191919;
+      border-radius: 0 0 16px 16px;
+      min-width: 200px;
+      min-height: 50px;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+    .ad-inner-box {
+      width: 100%;
+      max-width: 340px;
+      max-height: 110px;
+      min-height: 50px;
+      overflow: auto;
+      background: #191919;
+      border-radius: 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 2px;
+      border: 1px solid #23232d;
+      position: relative;
+    }
+    .ad-window-tip {
+      font-size: 0.92em;
+      color: #bbb;
+      text-align: center;
+      margin: 0 0 5px 0;
+      opacity: 0.6;
+      padding-bottom: 3px;
+    }
+    @media (max-width: 700px){
+      .search-bar, .note-list { max-width: 99vw; }
+      #master-ad-window {
+        min-width: 98vw;
+        max-width: 99vw;
+        right: 1vw;
+        bottom: 1vh;
+        border-radius: 0 0 0 0;
+        left: 0;
+      }
+      .ad-header-bar { border-radius: 0; }
+      .ad-window-content { border-radius: 0; }
+      .ad-inner-box { max-width: 96vw; }
+      .ad-window-close { font-size: 2.6em; padding: 20px 32px 20px 20px;}
+    }
+    @media (max-width: 500px){
+      .search-bar, .note-list { max-width: 100vw; }
+      #master-ad-window {
+        min-width: 99vw;
+        max-width: 100vw;
+        right: 0vw;
+        bottom: 0vh;
+        border-radius: 0;
+        left: 0;
+      }
+      .ad-header-bar { border-radius: 0; }
+      .ad-window-content { border-radius: 0; }
+      .ad-inner-box { max-width: 99vw; }
+      .ad-window-close { font-size: 2.7em; padding: 21px 46px 21px 21px;}
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="nature-logo">Only-Hot</div>
+    <div class="gallery-title-small">Gallery</div>
+    <div class="subtitle"></div>
+  </div>
+  <div class="search-bar-container">
+    <input id="search-bar" class="search-bar" placeholder="Search" type="text" autocomplete="off">
+  </div>
+  <div id="note-list" class="note-list" style="display:none"></div>
+  <div class="gallery" id="gallery"></div>
+  <div id="fs-overlay" onclick="closeFS(event)">
+    <button id="fs-close" onclick="closeFS(event)">&times;</button>
+    <div id="fs-content"></div>
+  </div>
+  <!-- Only ad1 and ad4 are kept -->
+  <div id="master-ad-window" class="hidden">
+    <div class="ad-header-bar">
+      Sponsored
+      <button class="ad-window-close" aria-label="Close" tabindex="0" onclick="hideAdWindow()">&times;</button>
+    </div>
+    <div class="ad-window-content">
+      <div class="ad-inner-box" id="ad1-box"></div>
+      <div class="ad-inner-box" id="ad4-box"></div>
+    </div>
+    <div class="ad-window-tip">Ads help keep Nature Gallery free ♥</div>
+  </div>
+  <script>
+  // Only ad1 and ad4 codes
+  const adCodes = [
+    `<script type="text/javascript">
+      atOptions = {
+        'key' : '560534b4dc0f7f6c7ef15c55a7b64fb5',
+        'format' : 'iframe',
+        'height' : 90,
+        'width' : 320,
+        'params' : {}
+      };
+    <\/script>
+    <script type="text/javascript" src="//www.highperformanceformat.com/560534b4dc0f7f6c7ef15c55a7b64fb5/invoke.js"><\/script>`,
+    `<script async="async" data-cfasync="false" src="//pl27080831.profitableratecpm.com/a6790d6a41c024632dc3ffcbddfc7ace/invoke.js"><\/script>
+    <div id="container-a6790d6a41c024632dc3ffcbddfc7ace"></div>`
+  ];
+
+  // Helper to remove and re-inject ads for a true "new ad" effect
+  function reloadFloatingAds() {
+    const ids = ['ad1-box','ad4-box'];
+    ids.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = '';
+    });
+    // Wait a moment to ensure previous ads are cleared from DOM
+    setTimeout(injectFloatingAds, 50);
+  }
+
+  function injectFloatingAds() {
+    const ids = ['ad1-box','ad4-box'];
+    adCodes.forEach((code, idx) => {
+      const el = document.getElementById(ids[idx]);
+      if (!el) return;
+      el.innerHTML = code;
+      if (!code.trim().startsWith("<iframe")) {
+        // Run scripts for script-based ads
+        let scripts = el.querySelectorAll('script');
+        for (const s of scripts) {
+          let newScript = document.createElement('script');
+          for (const attr of s.attributes) newScript.setAttribute(attr.name, attr.value);
+          if (s.innerHTML) newScript.innerHTML = s.innerHTML;
+          s.parentNode.replaceChild(newScript, s);
+        }
+      }
+    });
+  }
+
+  let adShowTimeout = null;
+
+  function showAdWindow() {
+    reloadFloatingAds();
+    document.getElementById('master-ad-window').classList.remove('hidden');
+  }
+  function hideAdWindow() {
+    document.getElementById('master-ad-window').classList.add('hidden');
+    if (adShowTimeout) clearTimeout(adShowTimeout);
+    adShowTimeout = setTimeout(() => {
+      showAdWindow();
+    }, 10000); // 10 seconds
+  }
+
+  // --- Gallery and Search ---
+  let allItems = []; // Will hold all gallery items
+
+  async function fetchGallery() {
+    const resp = await fetch('fetch.php');
+    const items = await resp.json();
+    allItems = items;
+    renderGallery(items);
+  }
+
+  function renderGallery(items) {
+    const gallery = document.getElementById('gallery');
+    gallery.innerHTML = '';
+    for (let idx=0; idx < items.length; idx++) {
+      const item = items[idx];
+      const div = document.createElement('div');
+      div.className = 'item';
+      let mediaElem;
+      if (item.type === 'video') {
+        if (item.is_uploadthing && item.url) {
+          // Prevent GitHub CDN error: Only allow if url is not viewscreen.githubusercontent.com
+          if (/viewscreen\.githubusercontent\.com/.test(item.url)) {
+            mediaElem = document.createElement('div');
+            mediaElem.innerHTML = '<span style="color:#f77">Video file cannot be loaded from this source.</span>';
+            mediaElem.className = 'media';
+          } else {
+            mediaElem = document.createElement('video');
+            mediaElem.src = item.url;
+            mediaElem.className = 'media';
+            mediaElem.controls = true;
+            mediaElem.playsInline = true;
+            mediaElem.preload = "metadata";
+          }
+        } else {
+          mediaElem = document.createElement('video');
+          mediaElem.src = 'uploads/' + item.filename;
+          mediaElem.className = 'media';
+          mediaElem.controls = true;
+          mediaElem.playsInline = true;
+          mediaElem.preload = "metadata";
+        }
+      } else {
+        if (item.is_uploadthing && item.url && /viewscreen\.githubusercontent\.com/.test(item.url)) {
+          // Blocked GitHub CDN image
+          mediaElem = document.createElement('div');
+          mediaElem.innerHTML = '<span style="color:#f77">Image cannot be loaded from this source.</span>';
+          mediaElem.className = 'media';
+        } else {
+          mediaElem = document.createElement('img');
+          mediaElem.src = item.is_uploadthing && item.url ? item.url : ('uploads/' + item.filename);
+          mediaElem.alt = 'Nature Photo';
+          mediaElem.className = 'media';
+        }
+      }
+      mediaElem.onclick = function (e) { showFS(item); };
+      div.appendChild(mediaElem);
+
+      // Note
+      if (item.note && item.note.trim() !== "") {
+        const note = document.createElement('div');
+        note.className = 'note';
+        let split = item.note.split('<!--ad-split-->');
+        note.innerHTML = (split[0]||'').replace(/\n/g, "<br>");
+        div.appendChild(note);
+      }
+
+      // Download button for local uploads only
+      if (!item.is_uploadthing) {
+        const downloadBtn = document.createElement('button');
+        downloadBtn.className = 'download-btn';
+        downloadBtn.title = 'Download';
+        downloadBtn.innerHTML = "Download";
+        downloadBtn.onclick = function (ev) {
+          ev.stopPropagation();
+          let a = document.createElement('a');
+          a.href = 'uploads/' + item.filename;
+          a.download = item.filename;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+        };
+        div.appendChild(downloadBtn);
+      }
+
+      gallery.appendChild(div);
+    }
+  }
+
+  // --- Note Search ---
+  function renderNoteList(filteredNotes) {
+    const noteList = document.getElementById('note-list');
+    noteList.innerHTML = '';
+    if (!filteredNotes.length) {
+      noteList.style.display = 'none';
+      return;
+    }
+    filteredNotes.forEach(obj => {
+      const btn = document.createElement('button');
+      btn.className = 'note-list-item';
+      btn.textContent = obj.text;
+      btn.onclick = function() {
+        noteList.style.display = 'none';
+        renderGallery([obj.item]);
+      };
+      noteList.appendChild(btn);
+    });
+    noteList.style.display = 'flex';
+  }
+
+  function onSearchInput(ev) {
+    const val = ev.target.value.trim().toLowerCase();
+    if (!val) {
+      document.getElementById('note-list').style.display = 'none';
+      renderGallery(allItems);
+      return;
+    }
+    // Gather all notes (with text and item ref)
+    let notes = [];
+    allItems.forEach(item => {
+      if (item.note && item.note.trim() !== '') {
+        let split = item.note.split('<!--ad-split-->');
+        let txt = (split[0]||'').replace(/\n/g, " ").trim();
+        if (txt) notes.push({text: txt, item});
+      }
+    });
+    // Filter notes
+    let filtered = notes.filter(obj => obj.text.toLowerCase().includes(val));
+    renderNoteList(filtered);
+  }
+
+  // --- Fullscreen display ---
+  function showFS(item) {
+    const overlay = document.getElementById('fs-overlay');
+    const fsContent = document.getElementById('fs-content');
+    fsContent.innerHTML = '';
+    let elem;
+    if (item.type === 'video') {
+      if (item.is_uploadthing && item.url) {
+        if (/viewscreen\.githubusercontent\.com/.test(item.url)) {
+          elem = document.createElement('div');
+          elem.innerHTML = '<span style="color:#f77">Video file cannot be loaded from this source.</span>';
+        } else {
+          elem = document.createElement('video');
+          elem.src = item.url;
+          elem.controls = true;
+          elem.style.maxWidth = '97vw';
+          elem.style.maxHeight = '93vh';
+          elem.autoplay = true;
+          elem.playsInline = true;
+          elem.preload = "auto";
+        }
+      } else {
+        elem = document.createElement('video');
+        elem.src = 'uploads/' + item.filename;
+        elem.controls = true;
+        elem.style.maxWidth = '97vw';
+        elem.style.maxHeight = '93vh';
+        elem.autoplay = true;
+        elem.playsInline = true;
+        elem.preload = "auto";
+      }
+    } else {
+      if (item.is_uploadthing && item.url && /viewscreen\.githubusercontent\.com/.test(item.url)) {
+        elem = document.createElement('div');
+        elem.innerHTML = '<span style="color:#f77">Image cannot be loaded from this source.</span>';
+      } else {
+        elem = document.createElement('img');
+        elem.src = item.is_uploadthing && item.url ? item.url : ('uploads/' + item.filename);
+        elem.style.maxWidth = '97vw';
+        elem.style.maxHeight = '93vh';
+      }
+    }
+    fsContent.appendChild(elem);
+
+    if (item.note && item.note.trim() !== "") {
+      const note = document.createElement('div');
+      note.className = 'note';
+      note.style.color = '#fff';
+      note.style.textShadow = '1px 1px 0 #000, 0 2px 8px #333';
+      let split = item.note.split('<!--ad-split-->');
+      note.innerHTML = (split[0]||'').replace(/\n/g, "<br>");
+      fsContent.appendChild(note);
+
+      // Show ad HTML if present
+      if (item.note.indexOf('<!--ad-split-->') !== -1) {
+        const adDiv = document.createElement('div');
+        adDiv.innerHTML = item.note.split('<!--ad-split-->').slice(1).join('<!--ad-split-->');
+        fsContent.appendChild(adDiv);
+      }
+    }
+    overlay.style.display = 'flex';
+  }
+  function closeFS(event) {
+    if (!event || event.target.id === 'fs-overlay' || event.target.id === 'fs-close') {
+      document.getElementById('fs-overlay').style.display = 'none';
+      document.getElementById('fs-content').innerHTML = '';
+    }
+  }
+
+  // On load
+  injectFloatingAds();
+  fetchGallery();
+  setTimeout(showAdWindow, 2000);
+
+  // Search event
+  document.getElementById('search-bar').addEventListener('input', onSearchInput);
+  </script>
+</body>
+</html>
